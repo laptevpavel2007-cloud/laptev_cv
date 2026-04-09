@@ -17,7 +17,7 @@ for i in range(1, np.max(labeled)+1):
     l = opening(l, morphology.square(3))
     new_area = area(l)
 
-    if (new_area/old_area) < 5/9:
+    if (new_area/old_area) <= 5/9:
         cnt_stars += 1
 
 print("Количество звёздочек = ", cnt_stars)
