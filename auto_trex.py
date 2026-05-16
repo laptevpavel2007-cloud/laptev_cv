@@ -14,14 +14,14 @@ x1 = 175
 x2 = 320
 y1 = 115
 y2 = 175
-max_exp = 150
+max_exp = 130
 
 
 x_b1 = 175
 x_b2 = 260
 y_b1 = 50
 y_b2 = 115
-
+max_exp_b = 50
 
 go_x1 = 330
 go_x2 = 650
@@ -29,13 +29,7 @@ go_y1 = 25
 go_y2 = 80
 
 
-base_jump_t = 280
-base_duck_t = 250
-
-
-jump_cooldown = 0.1
-duck_cooldown = 0.2      
-fall_delay = 0.18        
+fall_delay = 0.12       
 
 time.sleep(3)
 
@@ -57,22 +51,18 @@ with mss.mss() as monic:
 
         current_time = time.time()
         delta = current_time - game_start_time
-        speed_factor = 1.0 + (delta / 200.0)
+        speed_factor = 1.0 + (delta / 175.0)
 
         dynamic_x2 = x2 + int((speed_factor - 1.0) * max_exp)
         dynamic_x2 = min(dynamic_x2, monitor['width'] - 10)
 
-        dynamic_x_b2 = x_b2 + int((speed_factor - 1.0) * (max_exp * 0.8))
-        dynamic_x_b2 = min(dynamic_x_b2, monitor['width'] - 10)
-
-        jump_threshold = base_jump_t * (0.8 + 0.2 / speed_factor)
-        duck_threshold = base_duck_t * (0.8 + 0.2 / speed_factor)
-
-
+        dynamic_x_b2 = x_b2 + int((speed_factor - 1.0) * max_exp_b) 
+        dynamic_x_b2 = min(dynamic_x_b2, monitor['width'] - 10)   
+      
         roi = binary[y1:y2, x1:dynamic_x2]
         aray = np.sum(roi) / 255.0
         
-        if aray > jump_threshold and (not is_jumping) and (current_time - last_jump_time > jump_cooldown):
+        if aray > 100 and (not is_jumping):
             pyautogui.press('space')
             is_jumping = True
             last_jump_time = current_time
@@ -84,7 +74,7 @@ with mss.mss() as monic:
         roi2 = binary[y_b1:y_b2, x_b1:dynamic_x_b2]
         aray_b = np.sum(roi2) / 255.0
 
-        if aray_b > duck_threshold and (not is_ducking) and (current_time - last_duck_time > duck_cooldown) and (not is_jumping):
+        if aray_b > 100 and (not is_ducking):
             pyautogui.keyDown('down')
             is_ducking = True
             last_duck_time = current_time
@@ -93,13 +83,13 @@ with mss.mss() as monic:
             is_ducking = False
 
 
-        if is_jumping and aray < 100 and (current_time - last_jump_time) > fall_delay:
+        if is_jumping and aray < 180 and (current_time - last_jump_time) > fall_delay:
             pyautogui.keyDown('down')
-            time.sleep(0.005)
+            time.sleep(0.01)
             pyautogui.keyUp('down')
             is_jumping = False
         
-        if is_jumping and (current_time - last_jump_time) > 0.25 and aray < 50:
+        if is_jumping and (current_time - last_jump_time) > 0.18 and aray < 50:
             is_jumping = False
 
         roi_go = binary[go_y1:go_y2, go_x1:go_x2]
@@ -119,7 +109,8 @@ with mss.mss() as monic:
         cv2.rectangle(binary, (x1, y1), (dynamic_x2, y2), 255, 2)
         cv2.rectangle(binary, (x_b1, y_b1), (dynamic_x_b2, y_b2), 255, 2)
         cv2.rectangle(binary, (go_x1, go_y1), (go_x2, go_y2), 255, 2)
-        cv2.imshow('T-Rex Bot', binary)
+
+        cv2.imshow('T-Rex', binary)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
